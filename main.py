@@ -4,12 +4,12 @@ from aiogram import Bot, Dispatcher, executor
 from aiogram.types import Message, CallbackQuery, ContentType
 from keyboards import Keyboard
 from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram.dispatcher.filters import Text
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 
 
 TOKEN = config('BOT_TOKEN')
-
 
 
 logging.basicConfig(level=getattr(logging, config('MODE'), logging.DEBUG))
@@ -53,17 +53,29 @@ async def action_on_send_check(callback_query: CallbackQuery):
         if callback_query.from_user.username:
             await bot.send_photo(
                 chat_id, photo=photo, 
-                caption='ФИО: Джон Ватсон\nПочта: john.watson@gmail.com'
+                caption='ФИО: Джон Ватсон\nПочта: john.watson@gmail.com\n\nОтменить операцию /cancel'
                 )
         else:
             await bot.send_photo(
                 chat_id, 
                 photo=photo,
-                caption='ФИО: Джон Ватсон\nПочта: john.watson@gmail.com\nTelegram: @johnwatson'
+                caption='ФИО: Джон Ватсон\nПочта: john.watson@gmail.com\nTelegram: @johnwatson\n\nОтменить операцию /cancel'
                 )
     finally:
         photo.close()
     await Form.data.set()
+
+
+@dp.message_handler(state='*', commands='cancel')
+@dp.message_handler(Text(equals='cancel', ignore_case=True), state='*')
+async def cancel_handler(message: Message, state: FSMContext):
+    current_state = await state.get_state()
+    if current_state is None:
+        return
+
+    logging.info('Cancelling state %r', current_state)
+    await state.finish()
+    await bot.send_message(message.chat.id, 'Выберите другую операцию', reply_markup=Keyboard.get_keyboard())
 
 
 @dp.message_handler(content_types=[ContentType.PHOTO, ContentType.TEXT], state=Form.data)
