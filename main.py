@@ -9,6 +9,9 @@ TOKEN = config('BOT_TOKEN')
 BOT_URL = 'https://t.me/juniors_devBot'
 
 
+logging.basicConfig(level=logging.DEBUG)
+
+
 bot = Bot(TOKEN)
 dp = Dispatcher(bot)
 
@@ -26,12 +29,15 @@ async def start(message: Message):
 
 @dp.callback_query_handler(lambda callback_query: True)
 async def action_on_query_data(callback_query: CallbackQuery):
-    print('function working')
-    print(callback_query.id)
     chat_id = callback_query.message.chat.id
     data = callback_query.data
     if data == 'send_check':
-        await bot.send_message(chat_id, 'Отправьте чек')
+        await bot.send_message(chat_id, 'Отправьте чек и информацию о себе в следующем формате\n')
+        await bot.send_photo(chat_id, open('example.jpeg', 'rb'))
+        if callback_query.from_user.username:
+            await bot.send_message(chat_id, 'ФИО: Джон Ватсон\nПочта: john.watson@gmail.com')
+        else:
+            await bot.send_message(chat_id, 'ФИО: Джон Ватсон\nПочта: john.watson@gmail.com\nTelegram: @johnwatson')
     elif data == 'faq':
         await bot.send_message(
             chat_id, 
@@ -42,8 +48,6 @@ async def action_on_query_data(callback_query: CallbackQuery):
 
 @dp.message_handler(content_types=['photo'])
 async def send_check_to_admin(message: Message):
-    # print('==' * 20)
-    # print(message)
     await bot.send_photo('294919372', message.photo[0].file_id)
 
 
