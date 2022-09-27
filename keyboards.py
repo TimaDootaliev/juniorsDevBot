@@ -1,4 +1,5 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from decouple import config
 
 
 class Keyboard:
@@ -15,13 +16,13 @@ class Keyboard:
         keyboard = InlineKeyboardMarkup(row_width=1)
         buttons = (
             InlineKeyboardButton('🟢 Как начать?', callback_data='how_to_start'), 
-            InlineKeyboardButton('💡 Как проходит программа?', callback_data='about_programm'), 
+            InlineKeyboardButton('💡 Как проходит программа?', callback_data='about_program'), 
             InlineKeyboardButton('🕑 Когда начнется?', callback_data='when'), 
             InlineKeyboardButton('💰 Сколько стоит?', callback_data='price'), 
             InlineKeyboardButton(
-                '🎞 Получить ссылку на видео', 
+                '🎞 Видео "Что такое JuniorsDev?"', 
                 callback_data='youtube', 
-                url='https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstley'
+                url=config('VIDEO_URL')
                 )
         )
         for button in buttons:
