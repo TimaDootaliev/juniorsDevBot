@@ -46,6 +46,9 @@ async def action_on_query_data(callback_query: CallbackQuery):
             )
 
 
+@dp.register_callback_query_handler
+
+
 @dp.message_handler(content_types=['photo'])
 async def send_check_to_admin(message: Message):
     await bot.send_photo('294919372', message.photo[0].file_id)
