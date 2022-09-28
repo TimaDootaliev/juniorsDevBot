@@ -1,4 +1,4 @@
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 from decouple import config
 
 
@@ -27,4 +27,28 @@ class kb:
         )
         for button in buttons:
             keyboard.add(button)
+        return keyboard
+
+    
+    @classmethod
+    def send_check_button(cls):
+        button1 = KeyboardButton('💵 Отправить чек')
+        keyboard = ReplyKeyboardMarkup(
+            resize_keyboard=True, 
+            one_time_keyboard=False
+            )
+        keyboard.add(button1)
+        return keyboard
+
+
+    @classmethod
+    def cancel_button(cls):
+        button1 = KeyboardButton('Отмена операции')
+        button2 = KeyboardButton('💵 Отправить чек')
+        keyboard = ReplyKeyboardMarkup(
+            resize_keyboard=True, 
+            one_time_keyboard=False
+            )
+        keyboard.add(button1)
+        keyboard.add(button2)
         return keyboard
