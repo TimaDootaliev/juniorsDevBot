@@ -2,7 +2,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from decouple import config
 
 
-class Keyboard:
+class kb:
     @classmethod
     def get_keyboard(cls):
         keyboard = InlineKeyboardMarkup(row_width=1).row(
