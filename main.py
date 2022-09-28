@@ -79,24 +79,6 @@ async def cancel_handler(message: Message, state: FSMContext):
     await state.finish()
     await bot.send_message(message.chat.id, 'Выберите другую операцию', reply_markup=kb.get_keyboard())
 
-
-# @dp.message_handler(content_types=[ContentType.PHOTO, ContentType.TEXT], state=Form.data)
-# async def process_data(message: Message, state: FSMContext):
-#     async with state.proxy() as data:
-#         data['photo'] = message.photo[0].file_id
-#         data['info'] = message.caption
-#     await state.finish()
-#     if message.from_user.username:
-#         await bot.send_photo(
-#             ADMIN_ID, 
-#             photo=data['photo'], 
-#             caption=data['info'] + f'\n@{message.from_user.username}')
-#     else:
-#         await bot.send_photo(
-#             ADMIN_ID, 
-#             photo=data['photo'], 
-#             caption=data['info'])
-#     await bot.send_message(message.chat.id, 'Спасибо!', reply_markup=kb.get_keyboard())
     
 @dp.message_handler(content_types=ContentType.PHOTO, state=Form.image)
 async def process_image(message: Message, state: FSMContext):
@@ -116,7 +98,6 @@ async def process_email(message: Message, state: FSMContext):
     """
     Process user name
     """
-    # print(message)
     async with state.proxy() as data:
         data['name'] = message.text
 
@@ -129,7 +110,6 @@ async def process_email(message: Message, state: FSMContext):
     """
     Process user email
     """
-    # print(message)
     async with state.proxy() as data:
         data['email'] = message.text
 
@@ -142,7 +122,6 @@ async def process_stack(message: Message, state: FSMContext):
     """
     Process user stack
     """
-    # print(message)
     async with state.proxy() as data:
         data['stack'] = message.text
 
