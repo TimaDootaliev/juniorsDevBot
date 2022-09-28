@@ -18,7 +18,9 @@ logging.basicConfig(level=getattr(logging, config('MODE'), logging.DEBUG))
 
 class Form(StatesGroup):
     image = State()
-    data = State()
+    name = State()
+    email = State()
+    stack = State()
 
 
 storage = MemoryStorage()
@@ -52,10 +54,9 @@ async def action_on_send_check(callback_query: CallbackQuery):
     try:
         photo = open('example.jpeg', 'rb')
         if callback_query.from_user.username:
-            await bot.send_photo(
-                chat_id, photo=photo, 
-                caption='ФИО: Джон Ватсон\nПочта: john.watson@gmail.com\n\nОтменить операцию /cancel'
-                )
+            await bot.send_message(
+                chat_id, 
+                text='Пожалуйста, отправьте фото чека')
         else:
             await bot.send_photo(
                 chat_id, 
@@ -64,7 +65,7 @@ async def action_on_send_check(callback_query: CallbackQuery):
                 )
     finally:
         photo.close()
-    await Form.data.set()
+    await Form.image.set()
 
 
 @dp.message_handler(state='*', commands='cancel')
@@ -79,24 +80,81 @@ async def cancel_handler(message: Message, state: FSMContext):
     await bot.send_message(message.chat.id, 'Выберите другую операцию', reply_markup=kb.get_keyboard())
 
 
-@dp.message_handler(content_types=[ContentType.PHOTO, ContentType.TEXT], state=Form.data)
-async def process_data(message: Message, state: FSMContext):
-    async with state.proxy() as data:
-        data['photo'] = message.photo[0].file_id
-        data['info'] = message.caption
-    await state.finish()
-    if message.from_user.username:
-        await bot.send_photo(
-            ADMIN_ID, 
-            photo=data['photo'], 
-            caption=data['info'] + f'\n@{message.from_user.username}')
-    else:
-        await bot.send_photo(
-            ADMIN_ID, 
-            photo=data['photo'], 
-            caption=data['info'])
-    await bot.send_message(message.chat.id, 'Спасибо!', reply_markup=kb.get_keyboard())
+# @dp.message_handler(content_types=[ContentType.PHOTO, ContentType.TEXT], state=Form.data)
+# async def process_data(message: Message, state: FSMContext):
+#     async with state.proxy() as data:
+#         data['photo'] = message.photo[0].file_id
+#         data['info'] = message.caption
+#     await state.finish()
+#     if message.from_user.username:
+#         await bot.send_photo(
+#             ADMIN_ID, 
+#             photo=data['photo'], 
+#             caption=data['info'] + f'\n@{message.from_user.username}')
+#     else:
+#         await bot.send_photo(
+#             ADMIN_ID, 
+#             photo=data['photo'], 
+#             caption=data['info'])
+#     await bot.send_message(message.chat.id, 'Спасибо!', reply_markup=kb.get_keyboard())
     
+@dp.message_handler(content_types=ContentType.PHOTO, state=Form.image)
+async def process_image(message: Message, state: FSMContext):
+    """
+    Process user image
+    """
+    print(message)
+    async with state.proxy() as data:
+        data['image'] = message.photo[0].file_id
+
+    await Form.next()
+    await message.reply("Как Вас зовут?")
+
+
+@dp.message_handler(content_types=ContentType.TEXT, state=Form.name)
+async def process_email(message: Message, state: FSMContext):
+    """
+    Process user name
+    """
+    # print(message)
+    async with state.proxy() as data:
+        data['name'] = message.text
+
+    await Form.next()
+    await message.reply("Укажите Вашу почту")
+
+
+@dp.message_handler(content_types=ContentType.TEXT, state=Form.email)
+async def process_email(message: Message, state: FSMContext):
+    """
+    Process user email
+    """
+    # print(message)
+    async with state.proxy() as data:
+        data['email'] = message.text
+
+    await Form.next()
+    await message.reply("Укажите Ваш стэк (навыки, которыми Вы уже владеете)")
+
+
+@dp.message_handler(content_types=ContentType.TEXT, state=Form.stack)
+async def process_stack(message: Message, state: FSMContext):
+    """
+    Process user stack
+    """
+    # print(message)
+    async with state.proxy() as data:
+        data['stack'] = message.text
+
+    await state.finish()
+    await message.reply("Спасибо!")
+    await bot.send_photo(
+            ADMIN_ID, 
+            photo=data['image'], 
+            caption=f"{data['name']}\n{data['stack']}\n{data['email']}\n@{message.from_user.username}"
+            )
+
+
 
 @dp.callback_query_handler(lambda callback_query: callback_query.data=='how_to_start')
 async def how_to_start(cq: CallbackQuery):
