@@ -21,6 +21,7 @@ class Form(StatesGroup):
     name = State()
     email = State()
     stack = State()
+    tg = State()
 
 
 storage = MemoryStorage()
@@ -32,9 +33,12 @@ dp = Dispatcher(bot, storage=storage)
 async def start(message: Message):
     await bot.send_message(
         message.chat.id, 
-        f'Здравствуйте, {message.chat.first_name}! Выбери, что ты хочешь сделать', 
+        f'Здравствуйте, {message.chat.first_name}!', 
         reply_markup=kb.get_keyboard()
         )
+    await bot.send_message(
+        message.chat.id, text='Выбери, что ты хочешь сделать', 
+        reply_markup=kb.send_check_button())
 
 
 @dp.callback_query_handler(lambda callback_query: callback_query.data == 'faq')
@@ -47,29 +51,31 @@ async def action_on_query_data(callback_query: CallbackQuery):
             )
 
 
+@dp.message_handler(lambda message: message.text == '💵 Отправить чек')
+async def action_on_send_check(message: Message):
+    chat_id = message.chat.id
+    if message.from_user.username:
+        await bot.send_message(
+            chat_id, 
+            text='Пожалуйста, отправьте фото чека')
+    await Form.image.set()
+
+
 @dp.callback_query_handler(lambda callback_query: callback_query.data == 'send_check')
 async def action_on_send_check(callback_query: CallbackQuery):
     chat_id = callback_query.message.chat.id
     await bot.send_message(chat_id, 'Отправьте чек и информацию о себе в следующем формате\n')
-    try:
-        photo = open('example.jpeg', 'rb')
-        if callback_query.from_user.username:
-            await bot.send_message(
-                chat_id, 
-                text='Пожалуйста, отправьте фото чека')
-        else:
-            await bot.send_photo(
-                chat_id, 
-                photo=photo,
-                caption='ФИО: Джон Ватсон\nПочта: john.watson@gmail.com\nTelegram: @johnwatson\n\nОтменить операцию /cancel'
-                )
-    finally:
-        photo.close()
+    if callback_query.from_user.username:
+        await bot.send_message(
+            chat_id, 
+            text='Пожалуйста, отправьте фото чека',
+            reply_markup=kb.cancel_button()
+            )
     await Form.image.set()
 
 
-@dp.message_handler(state='*', commands='cancel')
-@dp.message_handler(Text(equals='cancel', ignore_case=True), state='*')
+@dp.message_handler(lambda message: message.text == 'Отмена операции',state='*')
+@dp.message_handler(Text(equals='Отмена операции', ignore_case=True), state='*')
 async def cancel_handler(message: Message, state: FSMContext):
     current_state = await state.get_state()
     if current_state is None:
@@ -98,6 +104,7 @@ async def process_email(message: Message, state: FSMContext):
     """
     Process user name
     """
+    # print(message)
     async with state.proxy() as data:
         data['name'] = message.text
 
@@ -110,6 +117,7 @@ async def process_email(message: Message, state: FSMContext):
     """
     Process user email
     """
+    # print(message)
     async with state.proxy() as data:
         data['email'] = message.text
 
@@ -124,14 +132,35 @@ async def process_stack(message: Message, state: FSMContext):
     """
     async with state.proxy() as data:
         data['stack'] = message.text
+    if message.from_user.username:
+        await state.finish()
+        await message.reply("Спасибо!", reply_markup=kb.get_faq_keyboard())
+        await bot.send_photo(
+                ADMIN_ID, 
+                photo=data['image'], 
+                caption=f"{data['name']}\n{data['stack']}\n{data['email']}\n@{message.from_user.username}"
+                )
+    else:
+        await Form.next()
+        await message.reply("Укажите ваш профиль Telegram (@myusername)")
+
+
+@dp.message_handler(content_types=ContentType.TEXT, state=Form.tg)
+async def process_tg_username(message: Message, state: FSMContext):
+    """
+    Process user username
+    """
+    async with state.proxy() as data:
+        data['username'] = message.text
 
     await state.finish()
-    await message.reply("Спасибо!")
+    await message.reply("Спасибо!", reply_markup=kb.get_faq_keyboard())
     await bot.send_photo(
             ADMIN_ID, 
             photo=data['image'], 
-            caption=f"{data['name']}\n{data['stack']}\n{data['email']}\n@{message.from_user.username}"
+            caption=f"{data['name']}\n{data['stack']}\n{data['email']}\n@{message.from_user.username}\n{data['username']}"
             )
+
 
 
 
