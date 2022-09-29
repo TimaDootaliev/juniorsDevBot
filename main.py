@@ -104,7 +104,6 @@ async def process_email(message: Message, state: FSMContext):
     """
     Process user name
     """
-    # print(message)
     async with state.proxy() as data:
         data['name'] = message.text
 
@@ -117,7 +116,6 @@ async def process_email(message: Message, state: FSMContext):
     """
     Process user email
     """
-    # print(message)
     async with state.proxy() as data:
         data['email'] = message.text
 
