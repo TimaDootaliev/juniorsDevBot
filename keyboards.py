@@ -15,6 +15,7 @@ class kb:
     def get_faq_keyboard(cls):
         keyboard = InlineKeyboardMarkup(row_width=1)
         buttons = (
+            InlineKeyboardButton('💵 Отправить чек', callback_data='send_check'),
             InlineKeyboardButton('🟢 Как начать?', callback_data='how_to_start'), 
             InlineKeyboardButton('💡 Как проходит программа?', callback_data='about_program'), 
             InlineKeyboardButton('🕑 Когда начнется?', callback_data='when'), 
