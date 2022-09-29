@@ -64,7 +64,6 @@ async def action_on_send_check(message: Message):
 @dp.callback_query_handler(lambda callback_query: callback_query.data == 'send_check')
 async def action_on_send_check(callback_query: CallbackQuery):
     chat_id = callback_query.message.chat.id
-    await bot.send_message(chat_id, 'Отправьте чек и информацию о себе в следующем формате\n')
     if callback_query.from_user.username:
         await bot.send_message(
             chat_id, 
