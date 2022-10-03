@@ -19,6 +19,7 @@ logging.basicConfig(level=getattr(logging, config('MODE'), logging.DEBUG))
 class Form(StatesGroup):
     image = State()
     name = State()
+    phone_number = State()
     email = State()
     stack = State()
     tg = State()
@@ -29,8 +30,8 @@ bot = Bot(TOKEN)
 dp = Dispatcher(bot, storage=storage)
 
 
-@dp.message_handler(commands=['start'])
-async def start(message: Message):
+@dp.message_handler(commands=['start'], state='*')
+async def start(message: Message, state: FSMContext):
     await bot.send_message(
         message.chat.id, 
         f'Здравствуйте, {message.chat.first_name}!', 
@@ -39,6 +40,7 @@ async def start(message: Message):
     await bot.send_message(
         message.chat.id, text='Выбери, что ты хочешь сделать', 
         reply_markup=kb.send_check_button())
+    await state.finish()
 
 
 @dp.callback_query_handler(lambda callback_query: callback_query.data == 'faq')
@@ -95,16 +97,28 @@ async def process_image(message: Message, state: FSMContext):
         data['image'] = message.photo[0].file_id
 
     await Form.next()
-    await message.reply("Как Вас зовут?")
+    await message.reply("Пожалуйста, отправьте Ваше имя и фамилию")
 
 
 @dp.message_handler(content_types=ContentType.TEXT, state=Form.name)
-async def process_email(message: Message, state: FSMContext):
+async def process_name(message: Message, state: FSMContext):
     """
     Process user name
     """
     async with state.proxy() as data:
         data['name'] = message.text
+
+    await Form.next()
+    await message.reply("Укажите Ваш номер телефона")
+
+
+@dp.message_handler(content_types=ContentType.TEXT, state=Form.phone_number)
+async def process_phone_number(message: Message, state: FSMContext):
+    """
+    Process user phone_number
+    """
+    async with state.proxy() as data:
+        data['phone_number'] = message.text
 
     await Form.next()
     await message.reply("Укажите Вашу почту")
@@ -131,11 +145,11 @@ async def process_stack(message: Message, state: FSMContext):
         data['stack'] = message.text
     if message.from_user.username:
         await state.finish()
-        await message.reply("Спасибо!", reply_markup=kb.get_faq_keyboard())
+        await message.reply("Спасибо! Скоро мы добавим Вас в группу", reply_markup=kb.get_faq_keyboard())
         await bot.send_photo(
-                ADMIN_ID, 
+                '490712995', 
                 photo=data['image'], 
-                caption=f"{data['name']}\n{data['stack']}\n{data['email']}\n@{message.from_user.username}"
+                caption=f"{data['name']}\n{data['phone_number']}\n{data['stack']}\n{data['email']}\n@{message.from_user.username}"
                 )
     else:
         await Form.next()
@@ -151,7 +165,7 @@ async def process_tg_username(message: Message, state: FSMContext):
         data['username'] = message.text
 
     await state.finish()
-    await message.reply("Спасибо!", reply_markup=kb.get_faq_keyboard())
+    await message.reply("Спасибо! Скоро мы добавим Вас в группу", reply_markup=kb.get_faq_keyboard())
     await bot.send_photo(
             ADMIN_ID, 
             photo=data['image'], 
