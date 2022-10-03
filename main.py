@@ -147,7 +147,7 @@ async def process_stack(message: Message, state: FSMContext):
         await state.finish()
         await message.reply("Спасибо! Скоро мы добавим Вас в группу", reply_markup=kb.get_faq_keyboard())
         await bot.send_photo(
-                '490712995', 
+                ADMIN_ID, 
                 photo=data['image'], 
                 caption=f"{data['name']}\n{data['phone_number']}\n{data['stack']}\n{data['email']}\n@{message.from_user.username}"
                 )
