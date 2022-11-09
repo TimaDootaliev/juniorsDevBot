@@ -88,15 +88,14 @@ async def cancel_handler(message: Message, state: FSMContext):
     await bot.send_message(message.chat.id, 'Выберите другую операцию', reply_markup=kb.get_keyboard())
 
     
-@dp.message_handler(content_types=[ContentType.PHOTO, ContentType.DOCUMENT], state=Form.image)
+@dp.message_handler(content_types=ContentType.PHOTO, state=Form.image)
 async def process_image(message: Message, state: FSMContext):
     """
     Process user image
     """
     print(message)
     async with state.proxy() as data:
-        data['image_url'] = await message.document.get_url()
-        print(data['image_url'], '-'*20)
+        data['image'] = message.photo[0].file_id
 
     await Form.next()
     await message.reply("Пожалуйста, отправьте Ваше имя и фамилию")
