@@ -9,6 +9,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 
 
+
 TOKEN = config('BOT_TOKEN')
 ADMIN_ID = config('ADMIN_ID')
 
@@ -87,14 +88,15 @@ async def cancel_handler(message: Message, state: FSMContext):
     await bot.send_message(message.chat.id, 'Выберите другую операцию', reply_markup=kb.get_keyboard())
 
     
-@dp.message_handler(content_types=ContentType.PHOTO, state=Form.image)
+@dp.message_handler(content_types=[ContentType.PHOTO, ContentType.DOCUMENT], state=Form.image)
 async def process_image(message: Message, state: FSMContext):
     """
     Process user image
     """
     print(message)
     async with state.proxy() as data:
-        data['image'] = message.photo[0].file_id
+        data['image_url'] = await message.document.get_url()
+        print(data['image_url'], '-'*20)
 
     await Form.next()
     await message.reply("Пожалуйста, отправьте Ваше имя и фамилию")
@@ -146,11 +148,6 @@ async def process_stack(message: Message, state: FSMContext):
     if message.from_user.username:
         await state.finish()
         await message.reply("Спасибо! Скоро мы добавим Вас в группу", reply_markup=kb.get_faq_keyboard())
-        await bot.send_photo(
-                ADMIN_ID, 
-                photo=data['image'], 
-                caption=f"{data['name']}\n{data['phone_number']}\n{data['stack']}\n{data['email']}\n@{message.from_user.username}"
-                )
     else:
         await Form.next()
         await message.reply("Укажите ваш профиль Telegram (@myusername)")
@@ -178,7 +175,7 @@ async def process_tg_username(message: Message, state: FSMContext):
 @dp.callback_query_handler(lambda callback_query: callback_query.data=='how_to_start')
 async def how_to_start(cq: CallbackQuery):
     msg = """
-1️⃣Необходимо внести оплату 830 сомов; наши реквизиты: 
+1️⃣Необходимо внести оплату 2490 сомов; наши реквизиты: 
 Мбанк 0703666656
 Элсом 0501619690
 Optima (долларовый счет): 4169 5853 5847 4186
@@ -226,8 +223,6 @@ async def date_handler(cq: CallbackQuery):
 async def price_handler(cq: CallbackQuery):
     msg = """
 Стоимость участия $30, или 2490 сомов. 
-
-‼️Первым 100 пользователям - $10, то есть 830 сомов. Если вы это читаете, значит еще успеваете купить по $10. 
 
 ✅Это единоразовый платеж, других обязательных оплат нет.
 ✅Также, нет ежемесячной платы за подписку.
