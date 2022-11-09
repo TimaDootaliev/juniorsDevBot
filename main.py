@@ -147,6 +147,11 @@ async def process_stack(message: Message, state: FSMContext):
     if message.from_user.username:
         await state.finish()
         await message.reply("Спасибо! Скоро мы добавим Вас в группу", reply_markup=kb.get_faq_keyboard())
+        await bot.send_photo(
+                ADMIN_ID, 
+                photo=data['image'], 
+                caption=f"{data['name']}\n{data['phone_number']}\n{data['stack']}\n{data['email']}\n@{message.from_user.username}"
+                )
     else:
         await Form.next()
         await message.reply("Укажите ваш профиль Telegram (@myusername)")
@@ -221,7 +226,7 @@ async def date_handler(cq: CallbackQuery):
 @dp.callback_query_handler(lambda callback_query: callback_query.data=='price')
 async def price_handler(cq: CallbackQuery):
     msg = """
-Стоимость участия $30, или 2490 сомов. 
+Стоимость участия $30 или 2490 сомов. 
 
 ✅Это единоразовый платеж, других обязательных оплат нет.
 ✅Также, нет ежемесячной платы за подписку.
